@@ -40,9 +40,9 @@ def check_nan_scale(df):
     return null
 
 
-def string_to_integer(col):
+def numstring_to_integer(col):
     '''
-    convert pandas object to integer type
+    convert pandas number like string object to integer type
 
     col: DataFrame[col]
 
@@ -82,18 +82,46 @@ def string_to_integer(col):
 
 def check_onetomany(df, key_col):
     '''
-    check if it is One to One or One to Many relation between key col and others
+    check the entity quantity relationship
 
     df: pandas dataframe
     key_col: name of primary col
-    for example, One to One relation is one id related to one object's name or one person
+    for example, one id related to one object's name or one person
 
-    return: dataframe for the entity correspondences between primary key and other columns
+    return: entity quantity relationship dataframe
     '''
-    combined = df.dropna(axis=0)
+    sub = df.dropna(axis=0)
 
-    combined_unique = combined.groupby(key_col).\
-                    agg({lambda x: Counter(list(x)).most_common(1)[0][0], "nunique"}).\
-                    rename(columns={"<lambda_0>": "most_frequent"})
+    def most_frequent(x):
+        return Counter(list(x)).most_common(1)[0][0]
 
-    return combined_unique
+    def entity_set(x):
+        return set(x)
+
+    unique = sub.groupby(key_col).agg({'nunique', most_frequent, entity_set})
+
+    return unique
+
+
+def fillna_dict(df, keycol, fillcol, dict_):
+    '''
+    fillna nans by dict, if there are some determined mapping relationship that can be inferred from other rows
+
+    df: pandas DataFrame, a sub df is suggested
+    dict_: dictionary used, keys are from cols, and values are determined mapping relationship
+    keycol: dict_,keys come from
+    fillcol: row with nan to be filled
+    '''
+    # search nan rows
+    tofill_index = df[df[fillcol].isnull().values==True].index
+    # record failed
+    found = 0
+    for tf_i in tofill_index:
+        try:
+            df[fillcol][tf_i] = dict_[df[keycol][tf_i]]
+            found += 1
+        except KeyError:
+            continue
+
+    print("name: {}, nan rows: {}, filled rows: {}".format(fillcol, len(tofill_index), found))
+    return df
