@@ -36,8 +36,22 @@ def check_nan_scale(df):
     '''
     null = pd.DataFrame(df.isnull().sum(), columns=['count_null'])
     null['proportion_null'] = (null['count_null'] / df.shape[0])
-    null['proportion_null'] = null['proportion_null'].apply(lambda x: format(x, '.2%'))
+    # null['proportion_null'] = null['proportion_null'].apply(lambda x: format(x, '.2%'))
     return null
+
+
+def drop_allnull_records(df, list_columnsname):
+    '''
+    drop records with chosen columns are all null
+
+    df: pandas DataFrame
+    list_columnsname: list of chosen columns
+    '''
+    result = df[list_columnsname[0]].notnull()
+    list_columnsname = list_columnsname[1:]
+    for colname in list_columnsname:
+        result = result + df[colname].notnull()
+    return df[result>0]
 
 
 def numstring_to_integer(col):
@@ -114,7 +128,7 @@ def fillna_dict(df, keycol, fillcol, dict_):
     '''
     # search nan rows
     tofill_index = df[df[fillcol].isnull().values==True].index
-    # record failed
+    # record succeeded
     found = 0
     for tf_i in tofill_index:
         try:
