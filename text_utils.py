@@ -6,12 +6,12 @@ import os
 import getpass
 
 # create some config folders
-foldername = "C:\\Users\\{}\\.datautils\\stopwords".format(getpass.getuser())
-if not os.path.exists(foldername):
-    os.makedirs(foldername)
+# foldername = "C:\\Users\\{}\\.datautils\\stopwords".format(getpass.getuser())
+# if not os.path.exists(foldername):
+#     os.makedirs(foldername)
 
 
-def getstopwords(stopwords="./", addition=None):
+def getstopwords(stopwords="./stopwords.txt", addition=None):
     '''
     stopwords: stopwords file path
     addition: stopwords list or None
@@ -91,3 +91,39 @@ def experiment_gensim_text2corpus(text, cuttool="jieba", stopwords="cn_stopwords
     return dictionary, corpus
 
 
+def words_cooc(list_text, list_keywords, win):
+    '''
+    using Words Co-occurrence
+    
+    list_text: sentences divided into words
+    list_keywords: list of keywords
+    win: words range
+    
+    return: co-occurence matrix.
+            matrix[i][j] refers to times of co-occurence between list_keywords[i] and list_keywords[j]
+    '''
+    list_keywords = list_keywords
+    list_text = list_text
+    win = win
+
+    words_indexs = []
+    for word in list_keywords:
+        words_indexs.append([i for i, x in enumerate(list_text) if x==word])
+
+    import numpy as np
+    matrix = np.zeros([len(list_keywords), len(list_keywords)])
+
+    # way1, window: 2(/1 = 1)
+    for idx, indexs in enumerate(words_indexs):
+        if idx == len(words_indexs)-1:
+            break
+        for index_a in words_indexs[idx]:
+            for idx_a_after in range(idx+1, len(words_indexs)):
+                for index_b in words_indexs[idx_a_after]:
+                    if index_a + win >= index_b and index_a -win <= index_b:
+                        matrix[idx, idx_a_after] += 1
+                        matrix[idx_a_after, idx] += 1
+                    elif index_a + win < index_b:  # if no more co word existing in keyword's window
+                        break
+    
+    return matrix
