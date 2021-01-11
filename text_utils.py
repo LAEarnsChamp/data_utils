@@ -24,13 +24,13 @@ def getstopwords(stopwords="./stopwords.txt", addition=None):
     list_sw = []
 
     # if stopwords file is not found
-    try:
-        with open("{}".format(stopwords), 'r', encoding='UTF-8') as sw_f:
-            for line in sw_f.readlines():
-                list_sw.append(line.strip())
+
+    with open("{}".format(stopwords), 'r', encoding='UTF-8') as sw_f:
+        for line in sw_f.readlines():
+            list_sw.append(line.strip())
+    if addition is not None:
         list_sw += addition
-    except FileNotFoundError as e:
-        raise e
+
     return list_sw
 
 
